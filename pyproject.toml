@@ -1,0 +1,31 @@
+[project]
+name = "GQLBridge"
+version = "0.1.0"
+description = "GQLBridge: Execute GraphQL-style queries on PostgreSQL and return nested JSON results."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Harshavardhan Chitakana", email = "chharshavardhan2001@gmail.com" }
+]
+keywords = ["GraphQL", "SQL", "PostgreSQL", "JSON", "ETL", "Data Engineering"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/GQLBridge"
+Documentation = "https://github.com/yourusername/GQLBridge#readme"
+Repository = "https://github.com/yourusername/GQLBridge"
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
