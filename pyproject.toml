@@ -19,9 +19,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/GQLBridge"
-Documentation = "https://github.com/yourusername/GQLBridge#readme"
-Repository = "https://github.com/yourusername/GQLBridge"
+Homepage = "https://github.com/HarshaChitakana/GQLBridge"
+Documentation = "https://github.com/HarshaChitakana/GQLBridge#readme"
+Repository = "https://github.com/HarshaChitakana/GQLBridge"
 
 [build-system]
 requires = ["setuptools>=42", "wheel"]
