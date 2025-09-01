@@ -39,7 +39,6 @@ def get_symbol(symbol_string):
 def get_args(selection, tableName):
     filterString = ' where '
     for args in selection['arguments']:
-        print(args)
         if args['value']['kind'] in ['object_value'] and args['name']['value'] not in ['left', 'right', 'inner', 'full', 'outer', 'full outer', 'cross']:
             symbol = get_symbol(args['value']['fields'][0]['name']['value'])
             if args["value"]["fields"][0]["value"]["kind"] in ['string_value']:
@@ -218,7 +217,6 @@ def traverse_selections(selectionSet, parent_table=None, table_flag=0):
         if args != []:
             join_table = eachSelection['name']['value']
             join_query, table_sql = traverse_selections(eachSelection, parent_table=selectionSet['name']['value'], table_flag=1)
-            print("testing args1")
 
             join_type, join_condition = get_join_condition_from_graphql(
                 eachSelection['arguments'],
@@ -231,8 +229,6 @@ def traverse_selections(selectionSet, parent_table=None, table_flag=0):
                 table_sql = table_sql[:-1] + ' where '
             else :
                 table_sql += ' AND '
-            print(table_sql)
-            print(join_condition)
 
             join_sql = f"""\'{join_table}\', (
                 SELECT jsonb_agg(
@@ -276,12 +272,14 @@ def run_query(query: str) -> pd.DataFrame:
     return df
 
 def main(queryStr):
+    global join_query_list, alias_map
+    alias_map = {}
+    join_query_list = []
 
     # Parse the query into an AST (Abstract Syntax Tree)
     parsedAst = parse(queryStr)
 
     # Print or inspect the AST
-    print(parsedAst.to_dict())
 
     graphqlDict = parsedAst.to_dict()
 
@@ -294,7 +292,6 @@ def main(queryStr):
 
         for selection in selectionSet['selections']:
             sqlQuery = traverse_selections(selection)
-            print(sqlQuery)
             df = run_query(sqlQuery)
 
             df.drop_duplicates(inplace=True)
