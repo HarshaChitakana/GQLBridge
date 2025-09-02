@@ -45,7 +45,7 @@ General Structure query
 
 ```json
 query {
-  project(eq:"demo_project") {
+  project(path: {eq:"demo_project"}) {
     id
     name
     description
@@ -65,7 +65,7 @@ This package supports joins between tables using GraphQL arguments.
 
 ```json
 query {
-  project(eq:"demo_project") {
+  project(path: {eq:"demo_project"}) {
     id
     name
     description
@@ -114,7 +114,7 @@ If a column in the database stores **JSON data**, you can request nested fields 
 
 ```json
 query {
-  project(eq:"demo_project") {
+  project(path: {eq:"demo_project"}) {
     id
     metadata {
       name
@@ -136,7 +136,7 @@ When a JSON field contains a **list (array)**, you must use `list_items` to expa
 
 ```json
 query {
-  project(eq:"demo_project") {
+  project(path: {eq:"demo_project"}) {
     id
     metadata {
       name
@@ -163,7 +163,7 @@ query {
 
 ```json
 query {
-  project(eq:"demo_project") {
+  project(path: {eq:"demo_project"}) {
     id
     name
     description
