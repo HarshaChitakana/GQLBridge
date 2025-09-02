@@ -54,7 +54,7 @@ query {
 ```
 
 * `project` → **Outer table** (the main table you are selecting from).
-* `eq:"demo_project"` → **Filter condition** (`WHERE project = 'demo_project'`).
+* `path: {eq:"demo_project"}` → **Filter condition** (`WHERE path = 'demo_project'`).
 * `id, name, description` → **Columns** to select.
 
 #### Joins
@@ -88,7 +88,7 @@ query {
 
 1. **Outer Table**
    * `project` is the **main table**.
-   * The filter `eq:"demo_project"` applies as a SQL `WHERE` clause.
+   * The filter `path: {eq:"demo_project"}"` applies as a SQL `WHERE` clause.
 2. **Join Tables**
    * `join_table1` and `join_table2` represent tables joined with `project`.
    * `left` specifies the **join type** (`LEFT JOIN`).
