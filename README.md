@@ -43,7 +43,7 @@ Queries are written in GraphQL style, but instead of hitting a GraphQL API, this
 
 General Structure query
 
-``` json
+``` graphql
 query {
   project(path: {eq:"demo_project"}) {
     id
@@ -63,7 +63,7 @@ This package supports joins between tables using GraphQL arguments.
 
 #### Example with Joins
 
-``` json
+``` graphql
 query {
   project(path: {eq:"demo_project"}) {
     id
@@ -111,7 +111,7 @@ If a column in the database stores **JSON data**, you can request nested fields 
 
 #### Example: Extracting JSON
 
-``` json
+``` graphql
 query {
   project(path: {eq:"demo_project"}) {
     id
@@ -133,7 +133,7 @@ When a JSON field contains a **list (array)**, you must use `list_items` to expa
 
 ### Example: JSON Array
 
-``` json
+``` graphql
 query {
   project(path: {eq:"demo_project"}) {
     id
@@ -160,7 +160,7 @@ query {
 
 ### Input Query
 
-``` json
+``` graphql
 query {
   project(path: {eq:"demo_project"}) {
     id
