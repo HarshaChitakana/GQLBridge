@@ -62,8 +62,8 @@ def get_args(selection, tableName):
         else:
             filterString += f'{tableName}.{args["name"]["value"]} = {args["value"]["value"]}'
         if filterString != ' where ':
-            filterString += ' and '
-    return filterString[:-5]
+            filterString += ' and  '
+    return filterString[:-6]
 
 def extract_columns(node, path=None, results=None):
     if path is None:
@@ -172,7 +172,7 @@ def prepare_selection_string(selection, table_or_col_flag, tableName=None): # 0 
 
 def get_join_condition_from_graphql(arguments, parent_table, join_table):
     join_type = "INNER JOIN"  # default
-    join_condition = ""
+    join_condition, parent_col_list = [], []
 
     for arg in arguments:
         arg_name = arg['name']['value'].lower()
@@ -190,24 +190,26 @@ def get_join_condition_from_graphql(arguments, parent_table, join_table):
             if arg['value']['kind'] == 'object_value':
                 for field in arg['value']['fields']:
                     val = field['value']['value']
-                    if val.startswith("eq-"):
-                        parent_col = val.replace("eq-", "")
-                        join_condition = (
-                            f"{parent_table}.{field['name']['value']} = {join_table}.{parent_col}"
-                        )
+                    symbol = get_symbol(val[:2])
+                    parent_col = val[3:]
+                    parent_col_list.append(parent_col)
+                    join_condition.append(
+                        f"{parent_table}.{field['name']['value']} {symbol} {join_table}.{parent_col}"
+                    )
 
             else:
                 raise Exception('Incorrect join condition')
 
             break  # stop after first valid join
 
-    return join_type, join_condition
+    return join_type, ' AND '.join(join_condition), ', '.join(set(parent_col_list))
 
 
 
 
-def traverse_selections(selectionSet, parent_table=None, table_flag=0):
+def traverse_selections(selectionSet, join_sql_ctc_list, parent_table=None, table_flag=0):
     sqlQuery = "SELECT " if table_flag == 1 else "SELECT jsonb_build_object("
+    join_query_list = []
 
     if selectionSet['selection_set'] is None:
         raise Exception('Provide columns of the table that need to be fetched')
@@ -216,29 +218,27 @@ def traverse_selections(selectionSet, parent_table=None, table_flag=0):
         args = eachSelection.get('arguments', [])
         if args != []:
             join_table = eachSelection['name']['value']
-            join_query, table_sql = traverse_selections(eachSelection, parent_table=selectionSet['name']['value'], table_flag=1)
+            join_query, table_sql = traverse_selections(eachSelection, join_sql_ctc_list, parent_table=selectionSet['name']['value'], table_flag=1)
 
-            join_type, join_condition = get_join_condition_from_graphql(
+            join_type, join_condition, join_col = get_join_condition_from_graphql(
                 eachSelection['arguments'],
                 parent_table=selectionSet['name']['value'],
                 join_table=join_table
             )
 
 
-            if 'where' not in table_sql:
-                table_sql = table_sql[:-1] + ' where '
-            else :
-                table_sql += ' AND '
 
-            join_sql = f"""\'{join_table}\', (
-                SELECT jsonb_agg(
+            join_sql = f"""{join_table}_gqlbridge AS (
+                SELECT {join_col} ,jsonb_agg(
                     jsonb_build_object({join_query[6:-2]})
-                ) 
-             FROM (SELECT * FROM {table_sql} {join_condition}) AS {join_table}
-            ), \n"""
-            sqlQuery += join_sql
+                )
+             FROM (SELECT * FROM {table_sql}) AS {join_table} 
+             GROUP BY {join_col}
+            ) \n"""
+            join_sql_ctc_list.append(join_sql)
+            sqlQuery += f'\'{join_table}\', {join_table}_gqlbridge.jsonb_agg, \n'
 
-            join_query_list.append(f"{join_type} {join_table} ON {join_condition}")
+            join_query_list.append(f"{join_type} {join_table}_gqlbridge ON {join_condition.replace(join_table+'.',join_table+'_gqlbridge.')}")
             continue
 
         col_sql = prepare_selection_string(eachSelection, 0, selectionSet['name']['value'])
@@ -248,6 +248,10 @@ def traverse_selections(selectionSet, parent_table=None, table_flag=0):
     if table_flag == 1:
         return sqlQuery, table_sql
     sqlQuery = f"{sqlQuery[:-2]}) FROM (SELECT * FROM {table_sql}) AS {selectionSet['name']['value']}"
+
+    if table_flag == 0:
+        if join_query_list:
+            sqlQuery = 'WITH '+",\n  ".join(join_sql_ctc_list) + '\n' + sqlQuery
     if join_query_list:
         sqlQuery += " " + " ".join(join_query_list)
 
@@ -273,8 +277,6 @@ def run_query(query: str) -> pd.DataFrame:
 
 def main(queryStr):
     global join_query_list, alias_map
-    alias_map = {}
-    join_query_list = []
 
     # Parse the query into an AST (Abstract Syntax Tree)
     parsedAst = parse(queryStr)
@@ -291,7 +293,8 @@ def main(queryStr):
         selectionSet = defination['selection_set']
 
         for selection in selectionSet['selections']:
-            sqlQuery = traverse_selections(selection)
+            join_sql_ctc_list = []
+            sqlQuery = traverse_selections(selection, join_sql_ctc_list)
             df = run_query(sqlQuery)
 
             df.drop_duplicates(inplace=True)
@@ -302,8 +305,8 @@ def main(queryStr):
     return json.dumps(final_dict)
 
 if __name__:
-    alias_map = {}
-    join_query_list = []
+    # alias_map = {}
+    # join_query_list = []
     with open('graphql_query.txt', 'r') as file:
         queryStr = file.read()
     resultant_dict = main(queryStr)
