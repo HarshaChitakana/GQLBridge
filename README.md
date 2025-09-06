@@ -16,6 +16,7 @@ This package allows you to write GraphQL-style queries against a PostgreSQL data
 * **JSON output**: Returns query results as nested JSON objects for direct consumption in APIs or applications.
 * **Join handling**: Supports `LEFT`, `RIGHT`, `INNER`, `FULL`, and `CROSS` joins defined via GraphQL arguments.
 * **Filter support**: Handles comparison operators (`eq`, `ne`, `lt`, `gt`, `le`, `ge`) and list-based filters.
+* **Pagination**: Supports **pagination** with `first`, `after`, and `orderBy`.
 * **Date handling**: Automatically parses and casts date strings into `TIMESTAMP`.
 * **Integration ready**: Returns results as Python dictionaries (via Pandas + JSON), suitable for APIs, ETL, or downstream analytics.
 
@@ -131,7 +132,7 @@ This extracts `metadata.name` and `metadata.version` from the `metadata` JSON co
 
 When a JSON field contains a **list (array)**, you must use `list_items` to expand it.
 
-### Example: JSON Array
+#### Example: JSON Array
 
 ``` graphql
 query {
@@ -156,9 +157,31 @@ query {
 
 ---
 
-#### End-to-End Example
+#### Pagination
 
-### Input Query
+With pagination, you can easily control how many rows to fetch, where to start, and the order of results — all directly in your GraphQL-style query.
+
+#### Example: Pagination
+``` graphql
+query {
+  project(first: 3, after: 2, orderBy: "id") {
+    id
+    name
+    fullPath
+    description
+  }
+}
+```
+
+* first: 3 → limit results to 3 rows
+* after: 2 → offset (skip) the first page - first 3 rows
+* orderBy: "id" → order results by column id
+
+---
+
+### End-to-End Example
+
+#### Input Query
 
 ``` graphql
 query {
@@ -190,7 +213,7 @@ query {
 }
 ```
 
-### Output JSON
+#### Output JSON
 
 ``` json
 {
@@ -217,7 +240,7 @@ query {
 }
 ```
 
-#### Supported Features
+### Supported Features
 
 * ✅ GraphQL-style query input (string-based).
 * ✅ Automatic translation to PostgreSQL SQL.
@@ -227,13 +250,13 @@ query {
 * ✅ Extracts and structures **JSON and JSON arrays** with `list_items`.
 * ✅ Returns results as **nested JSON** matching the GraphQL query shape.
 
-#### Audience
+### Audience
 
 * **Data engineers**: Simplify ETL pipelines with GraphQL queries on SQL data.
 * **Backend developers**: Expose data without writing raw SQL.
 * **Organizations**: Provide a query interface for PostgreSQL that feels like GraphQL.
 * **Analysts**: Explore relational data using GraphQL syntax.
 
-#### License
+### License
 
 MIT License.
