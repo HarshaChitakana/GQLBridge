@@ -106,43 +106,7 @@ def shorten_alias(alias: str, max_len: int = 63) -> str:
 def prepare_json_col(json_schema_list, col_name, tableName):
     alias_counter = {"count": 0}  # simple counter for unique elem aliases
 
-    def next_alias():
-        alias_counter["count"] += 1
-        return f"elem{alias_counter['count']}"
-
-    def build_grouped(paths, base_ref):
-
-        grouped = {}
-        for path in paths:
-            head, *tail = path.split('/')
-            grouped.setdefault(head, []).append(tail)
-
-        fields = []
-        for head, tails in grouped.items():
-            if head == "list_items":
-                # Handle array expansion → give unique alias
-                alias = next_alias()
-                inner = build_grouped(
-                    ["/".join(t) for t in tails if t],
-                    f"{alias}.value"
-                )
-                return f"""(
-                    SELECT jsonb_agg({inner})
-                    FROM jsonb_array_elements({base_ref}) {alias}
-                )"""
-            else:
-                # Object or leaf
-                if any(t for t in tails):  # deeper fields exist
-                    inner = build_grouped(
-                        ["/".join(t) for t in tails if t],
-                        f"{base_ref}->'{head}'"
-                    )
-                    fields.append(f"'{head}', {inner}")
-                else:  # leaf field
-                    fields.append(f"'{head}', {base_ref}->>'{head}'")
-
-        return f"jsonb_build_object({', '.join(fields)})"
-
+    
     # Root expression build
     json_expr = build_grouped(json_schema_list, f"{tableName}.{col_name}::jsonb")
     return f"\'{col_name}\', {json_expr}, "
